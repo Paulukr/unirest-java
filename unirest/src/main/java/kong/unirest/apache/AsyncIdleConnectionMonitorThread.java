@@ -25,15 +25,14 @@
 
 package kong.unirest.apache;
 
-import java.util.concurrent.TimeUnit;
 
-import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManager;
 
 public class AsyncIdleConnectionMonitorThread extends Thread {
 
-	private final PoolingNHttpClientConnectionManager connMgr;
+	private final PoolingAsyncClientConnectionManager connMgr;
 
-	public AsyncIdleConnectionMonitorThread(PoolingNHttpClientConnectionManager connMgr) {
+	public AsyncIdleConnectionMonitorThread(PoolingAsyncClientConnectionManager connMgr) {
 		super();
 		super.setDaemon(true);
 		this.connMgr = connMgr;
@@ -46,10 +45,10 @@ public class AsyncIdleConnectionMonitorThread extends Thread {
 				synchronized (this) {
 					wait(5000);
 					// Close expired connections
-					connMgr.closeExpiredConnections();
+					connMgr.closeExpired();
 					// Optionally, close connections
 					// that have been idle longer than 30 sec
-					connMgr.closeIdleConnections(30, TimeUnit.SECONDS);
+					connMgr.closeIdle(org.apache.hc.core5.util.TimeValue.ofSeconds(30));
 				}
 			}
 		} catch (InterruptedException ex) {

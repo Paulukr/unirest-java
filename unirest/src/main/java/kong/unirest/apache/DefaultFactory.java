@@ -27,35 +27,32 @@ package kong.unirest.apache;
 
 import kong.unirest.Config;
 import kong.unirest.HttpRequest;
-import org.apache.http.client.config.RequestConfig;
+import org.apache.hc.client5.http.config.RequestConfig;
+
+import java.util.concurrent.TimeUnit;
 
 class DefaultFactory implements RequestConfigFactory {
-    private static boolean isOldApache = false;
     @Override
     public RequestConfig apply(Config config, HttpRequest request) {
         RequestConfig.Builder builder = RequestConfig.custom()
-                .setConnectTimeout(request.getConnectTimeout())
-                .setSocketTimeout(request.getSocketTimeout())
-                .setConnectionRequestTimeout(request.getSocketTimeout())
+                .setConnectTimeout(request.getConnectTimeout(), TimeUnit.MILLISECONDS)
+                .setResponseTimeout(request.getSocketTimeout(), TimeUnit.MILLISECONDS)
+                .setConnectionRequestTimeout(request.getSocketTimeout(), TimeUnit.MILLISECONDS)
                 .setProxy(RequestOptions.toApacheProxy(request.getProxy()))
-                .setCookieSpec(config.getCookieSpec());
+                .setCookieSpec(cookieSpec(config.getCookieSpec()));
 
-        return tryNormalize(builder).build();
+        return builder.build();
     }
-
-    private RequestConfig.Builder tryNormalize(RequestConfig.Builder builder) {
-        if(isOldApache){
-            return builder;
+    private String cookieSpec(String spec) {
+        if (spec == null || "standard".equalsIgnoreCase(spec) || "default".equalsIgnoreCase(spec)) {
+            return org.apache.hc.client5.http.cookie.StandardCookieSpec.RELAXED;
         }
-
-        try {
-            return builder.setNormalizeUri(false);
-        }catch (NoSuchMethodError e) {
-            // setNormalizeUri doesnt exist in old version of apache client
-            // the behavior that it does used to just be standard
-            // so remember that we don't care
-            isOldApache = true;
-            return builder;
+        if ("ignoreCookies".equalsIgnoreCase(spec)) {
+            return org.apache.hc.client5.http.cookie.StandardCookieSpec.IGNORE;
         }
+        if ("standard-strict".equalsIgnoreCase(spec)) {
+            return org.apache.hc.client5.http.cookie.StandardCookieSpec.STRICT;
+        }
+        return spec;
     }
 }

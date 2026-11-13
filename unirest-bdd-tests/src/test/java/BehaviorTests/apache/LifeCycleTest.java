@@ -29,13 +29,13 @@ import BehaviorTests.BddTest;
 import BehaviorTests.MockServer;
 import kong.unirest.*;
 import kong.unirest.apache.AsyncIdleConnectionMonitorThread;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManager;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -57,12 +57,12 @@ class LifeCycleTest extends BddTest {
     @Mock
     private AsyncIdleConnectionMonitorThread asyncMonitor;
     @Mock
-    private PoolingNHttpClientConnectionManager manager;
+    private PoolingAsyncClientConnectionManager manager;
 
     @Test
     void willNotShutdownInactiveAsyncClient() throws IOException {
         CloseableHttpAsyncClient asyncClient = mock(CloseableHttpAsyncClient.class);
-        when(asyncClient.isRunning()).thenReturn(false);
+        when(asyncClient.getStatus()).thenReturn(org.apache.hc.core5.reactor.IOReactorStatus.SHUT_DOWN);
 
         Unirest.config().asyncClient(asyncClient);
 

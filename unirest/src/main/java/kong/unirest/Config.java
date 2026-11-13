@@ -27,9 +27,9 @@ package kong.unirest;
 
 import kong.unirest.apache.ApacheAsyncClient;
 import kong.unirest.apache.ApacheClient;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.client.HttpClient;
-import org.apache.http.nio.client.HttpAsyncClient;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.core5.http.HttpRequestInterceptor;
+import org.apache.hc.client5.http.async.HttpAsyncClient;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -169,7 +169,7 @@ public class Config {
      */
     @Deprecated
     public Config asyncClient(HttpAsyncClient value) {
-        this.asyncClient = Optional.of(new ApacheAsyncClient(value, this, null, null));
+        this.asyncClient = Optional.of(new ApacheAsyncClient(value, this));
         return this;
     }
 

@@ -28,12 +28,12 @@ package kong.unirest;
 import kong.unirest.apache.ApacheAsyncClient;
 import kong.unirest.apache.ApacheClient;
 import kong.unirest.apache.AsyncIdleConnectionMonitorThread;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
-import org.apache.http.nio.client.HttpAsyncClient;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
+import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManager;
+import org.apache.hc.client5.http.async.HttpAsyncClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -62,7 +62,7 @@ class ConfigTest {
     @Mock
     private AsyncIdleConnectionMonitorThread asyncMonitor;
     @Mock
-    private PoolingNHttpClientConnectionManager manager;
+    private PoolingAsyncClientConnectionManager manager;
 
     @InjectMocks
     private Config config;
@@ -117,7 +117,7 @@ class ConfigTest {
     @Test
     void willRebuildIfClosableAndStopped() {
         CloseableHttpAsyncClient c = mock(CloseableHttpAsyncClient.class);
-        when(c.isRunning()).thenReturn(false);
+        when(c.getStatus()).thenReturn(org.apache.hc.core5.reactor.IOReactorStatus.SHUT_DOWN);
 
         config.asyncClient(c);
 
@@ -126,7 +126,7 @@ class ConfigTest {
 
     @Test
     void testShutdown() throws IOException {
-        when(asyncClient.isRunning()).thenReturn(true);
+        when(asyncClient.getStatus()).thenReturn(org.apache.hc.core5.reactor.IOReactorStatus.ACTIVE);
 
         Unirest.config()
                 .httpClient(new ApacheClient(httpc, null, clientManager))
@@ -153,7 +153,7 @@ class ConfigTest {
 
     @Test
     void willPowerThroughErrors() throws IOException {
-        when(asyncClient.isRunning()).thenReturn(true);
+        when(asyncClient.getStatus()).thenReturn(org.apache.hc.core5.reactor.IOReactorStatus.ACTIVE);
         doThrow(new IOException("1")).when(httpc).close();
         doThrow(new RuntimeException("2")).when(clientManager).close();
         doThrow(new IOException("4")).when(asyncClient).close();
@@ -178,7 +178,7 @@ class ConfigTest {
 
     @Test
     void doesNotBombOnNullOptions() throws IOException {
-        when(asyncClient.isRunning()).thenReturn(true);
+        when(asyncClient.getStatus()).thenReturn(org.apache.hc.core5.reactor.IOReactorStatus.ACTIVE);
 
         Unirest.config()
                 .httpClient(new ApacheClient(httpc, null, null))
@@ -204,7 +204,7 @@ class ConfigTest {
     @Test
     void willNotRebuildIfRunning() {
         CloseableHttpAsyncClient c = mock(CloseableHttpAsyncClient.class);
-        when(c.isRunning()).thenReturn(true);
+        when(c.getStatus()).thenReturn(org.apache.hc.core5.reactor.IOReactorStatus.ACTIVE);
 
         config.asyncClient(c);
 

@@ -32,13 +32,13 @@ import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import kong.unirest.apache.ApacheAsyncClient;
 import kong.unirest.apache.ApacheClient;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
-import org.apache.http.message.BasicHeader;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.core5.http.HttpRequestInterceptor;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
+import org.apache.hc.client5.http.impl.async.HttpAsyncClientBuilder;
+import org.apache.hc.core5.http.message.BasicHeader;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,7 +68,7 @@ public class ApacheClientTest extends BddTest {
     @Test
     void settingACustomClientWithBuilder() {
         HttpClient client = HttpClientBuilder.create()
-                .addInterceptorFirst((HttpRequestInterceptor) (q, w) -> interceptorCalled = true)
+                .addRequestInterceptorFirst((HttpRequestInterceptor) (q, e, w) -> interceptorCalled = true)
                 .build();
 
         Unirest.config().httpClient(ApacheClient.builder(client)

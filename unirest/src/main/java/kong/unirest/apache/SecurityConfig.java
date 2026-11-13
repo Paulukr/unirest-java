@@ -27,23 +27,21 @@ package kong.unirest.apache;
 
 import kong.unirest.Config;
 import kong.unirest.UnirestConfigException;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
-import org.apache.http.conn.ssl.DefaultHostnameVerifier;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustStrategy;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.ssl.SSLContexts;
+import org.apache.hc.client5.http.ssl.DefaultHostnameVerifier;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.core5.http.config.Registry;
+import org.apache.hc.core5.http.config.RegistryBuilder;
+import org.apache.hc.client5.http.socket.ConnectionSocketFactory;
+import org.apache.hc.client5.http.socket.PlainConnectionSocketFactory;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
+import org.apache.hc.core5.ssl.SSLContexts;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 class SecurityConfig {
     private final Config config;
@@ -57,8 +55,9 @@ class SecurityConfig {
 
     public PoolingHttpClientConnectionManager createManager() {
         PoolingHttpClientConnectionManager manager = new PoolingHttpClientConnectionManager(buildSocketFactory(),
-                null, null, null,
-                config.getTTL(), TimeUnit.MILLISECONDS);
+                org.apache.hc.core5.pool.PoolConcurrencyPolicy.STRICT,
+                org.apache.hc.core5.pool.PoolReusePolicy.LIFO,
+                org.apache.hc.core5.util.TimeValue.ofMilliseconds(config.getTTL()));
 
         manager.setMaxTotal(config.getMaxConnections());
         manager.setDefaultMaxPerRoute(config.getMaxPerRoutes());
@@ -139,21 +138,6 @@ class SecurityConfig {
     }
 
     public void configureSecurity(HttpClientBuilder cb) {
-        if(config.getKeystore() != null){
-            cb.setSSLContext(createSslContext());
-            cb.setSSLSocketFactory(getSocketFactory());
-        }
-        if (!config.isVerifySsl()) {
-            disableSsl(cb);
-        }
-    }
-
-    private void disableSsl(HttpClientBuilder cb) {
-        try {
-            cb.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
-            cb.setSSLContext(new SSLContextBuilder().loadTrustMaterial(null, (TrustStrategy) (arg0, arg1) -> true).build());
-        } catch (Exception e) {
-            throw new UnirestConfigException(e);
-        }
+        // TLS settings are configured on the connection manager.
     }
 }

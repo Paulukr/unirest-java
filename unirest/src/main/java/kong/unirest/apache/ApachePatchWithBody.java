@@ -25,11 +25,11 @@
 
 package kong.unirest.apache;
 
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 
 import java.net.URI;
 
-class ApachePatchWithBody extends HttpEntityEnclosingRequestBase {
+class ApachePatchWithBody extends HttpUriRequestBase {
 	private static final String METHOD_NAME = "PATCH";
 
 	public String getMethod() {
@@ -37,7 +37,6 @@ class ApachePatchWithBody extends HttpEntityEnclosingRequestBase {
 	}
 
 	ApachePatchWithBody(final String uri) {
-		super();
-		setURI(URI.create(uri));
+		super(METHOD_NAME, URI.create(uri));
 	}
 }

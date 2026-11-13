@@ -299,8 +299,8 @@ public class RequestCapture {
         assertEquals(1, h.size(), "Expected exactly 1 Content-Type header");
         List<String> parts = Splitter.on(";").trimResults().splitToList(h.get(0));
         assertEquals("multipart/form-data", parts.get(0));
-        assertTrue(parts.get(1).startsWith("boundary="));
-        assertEquals("charset=UTF-8", parts.get(2));
+        assertTrue(parts.stream().anyMatch(p -> p.startsWith("boundary=")));
+        assertTrue(parts.stream().anyMatch(p -> p.equalsIgnoreCase("charset=UTF-8")));
         return this;
     }
 

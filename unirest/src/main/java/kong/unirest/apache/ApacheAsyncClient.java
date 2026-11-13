@@ -26,13 +26,16 @@
 package kong.unirest.apache;
 
 import kong.unirest.*;
-import org.apache.http.HttpHost;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.concurrent.FutureCallback;
-import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
-import org.apache.http.nio.client.HttpAsyncClient;
-import org.apache.http.nio.protocol.BasicAsyncRequestProducer;
-import org.apache.http.nio.protocol.BasicAsyncResponseConsumer;
+import org.apache.hc.client5.http.async.HttpAsyncClient;
+import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
+import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
+import org.apache.hc.client5.http.async.methods.SimpleRequestProducer;
+import org.apache.hc.client5.http.async.methods.SimpleResponseConsumer;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
+import org.apache.hc.core5.concurrent.FutureCallback;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
+import org.apache.hc.core5.http.message.BasicClassicHttpResponse;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -52,9 +55,8 @@ public class ApacheAsyncClient extends BaseApacheClient implements AsyncClient {
     }
 
     @Deprecated
-    public ApacheAsyncClient(HttpAsyncClient client,
-                             Config config,
-                             PoolingNHttpClientConnectionManager manager,
+    public ApacheAsyncClient(HttpAsyncClient client, Config config,
+                             org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManager manager,
                              AsyncIdleConnectionMonitorThread monitor) {
         this.apache = new ApacheAsyncConfig(client, config, manager, monitor);
     }
@@ -72,14 +74,29 @@ public class ApacheAsyncClient extends BaseApacheClient implements AsyncClient {
 
         Objects.requireNonNull(callback);
         apache.config.getUniInterceptor().onRequest(request, apache.config);
-        HttpUriRequest requestObj = new RequestPrep(request, apache.config, true).prepare(configFactory);
+        HttpUriRequestBase requestObj = new RequestPrep(request, apache.config, true).prepare(configFactory);
         HttpRequestSummary reqSum = request.toSummary();
         MetricContext metric = apache.config.getMetric().begin(reqSum);
-        HttpHost host = determineTarget(requestObj, request.getHeaders());
-        apache.client.execute(new BasicAsyncRequestProducer(host, requestObj), new BasicAsyncResponseConsumer(), new FutureCallback<org.apache.http.HttpResponse>() {
+        SimpleHttpRequest simple;
+        try {
+            simple = SimpleHttpRequest.copy(requestObj);
+            simple.setConfig(requestObj.getConfig());
+            if (requestObj.getEntity() != null) {
+                simple.setBody(EntityUtils.toByteArray(requestObj.getEntity()), null);
+            }
+        } catch (Exception e) {
+            callback.completeExceptionally(e);
+            return callback;
+        }
+        apache.client.execute(SimpleRequestProducer.create(simple), SimpleResponseConsumer.create(), null, null, new FutureCallback<SimpleHttpResponse>() {
             @Override
-            public void completed(org.apache.http.HttpResponse httpResponse) {
-                ApacheResponse t = new ApacheResponse(httpResponse, apache.config, reqSum);
+            public void completed(SimpleHttpResponse httpResponse) {
+                BasicClassicHttpResponse classic = new BasicClassicHttpResponse(httpResponse.getCode(), httpResponse.getReasonPhrase());
+                classic.setHeaders(httpResponse.getHeaders());
+                if (httpResponse.getBodyBytes() != null) {
+                    classic.setEntity(new ByteArrayEntity(httpResponse.getBodyBytes(), httpResponse.getContentType()));
+                }
+                ApacheResponse t = new ApacheResponse(classic, apache.config, reqSum);
                 metric.complete(t.toSummary(), null);
                 HttpResponse<T> response = transformBody(transformer, t);
                 apache.config.getUniInterceptor().onResponse(response, reqSum, apache.config);

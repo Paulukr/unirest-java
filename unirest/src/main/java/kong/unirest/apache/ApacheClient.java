@@ -26,18 +26,17 @@
 package kong.unirest.apache;
 
 import kong.unirest.*;
-import org.apache.http.HttpHost;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 
 import java.io.Closeable;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -83,10 +82,12 @@ public class ApacheClient extends BaseApacheClient implements Client {
         cb.setDefaultRequestConfig(RequestOptions.toRequestConfig(config))
                 .setDefaultCredentialsProvider(toApacheCreds(config.getProxy()))
                 .setConnectionManager(manager)
-                .evictIdleConnections(30, TimeUnit.SECONDS);
+                .evictIdleConnections(org.apache.hc.core5.util.TimeValue.ofSeconds(30));
 
         security.configureSecurity(cb);
-        if (!config.isAutomaticRetries()) {
+        if (config.isAutomaticRetries()) {
+            cb.setRetryStrategy(new NoResponseRetryStrategy());
+        } else {
             cb.disableAutomaticRetries();
         }
         if (!config.isRequestCompressionOn()) {
@@ -101,7 +102,11 @@ public class ApacheClient extends BaseApacheClient implements Client {
         if (!config.getEnabledCookieManagement()) {
             cb.disableCookieManagement();
         }
-        config.getInterceptor().stream().forEach(cb::addInterceptorFirst);
+        if (config.getEnabledCookieManagement()) {
+            cb.addRequestInterceptorFirst(CookieHeaderCompatibility.before());
+            cb.addRequestInterceptorLast(CookieHeaderCompatibility.after());
+        }
+        config.getInterceptor().stream().forEach(cb::addRequestInterceptorFirst);
         if (config.shouldAddShutdownHook()) {
             registerShutdownHook();
         }
@@ -122,22 +127,22 @@ public class ApacheClient extends BaseApacheClient implements Client {
 
         HttpRequestSummary reqSum = request.toSummary();
         config.getUniInterceptor().onRequest(request, config);
-        HttpRequestBase requestObj = new RequestPrep(request, config, false).prepare(configFactory);
+        HttpUriRequestBase requestObj = new RequestPrep(request, config, false).prepare(configFactory);
         MetricContext metric = config.getMetric().begin(reqSum);
         try {
             HttpHost host = determineTarget(requestObj, request.getHeaders());
-            org.apache.http.HttpResponse execute = client.execute(host, requestObj);
-            ApacheResponse t = new ApacheResponse(execute, config, reqSum);
-            metric.complete(t.toSummary(), null);
-            HttpResponse<T> httpResponse = transformBody(transformer, t);
-            requestObj.releaseConnection();
-            config.getUniInterceptor().onResponse(httpResponse, reqSum, config);
-            return httpResponse;
+            try (org.apache.hc.core5.http.ClassicHttpResponse execute = client.execute(host, requestObj)) {
+                ApacheResponse t = new ApacheResponse(execute, config, reqSum);
+                metric.complete(t.toSummary(), null);
+                HttpResponse<T> httpResponse = transformBody(transformer, t);
+                config.getUniInterceptor().onResponse(httpResponse, reqSum, config);
+                return httpResponse;
+            }
         } catch (Exception e) {
             metric.complete(null, e);
             return (HttpResponse<T>) config.getUniInterceptor().onFail(e, reqSum, config);
         } finally {
-            requestObj.releaseConnection();
+            requestObj.reset();
         }
     }
 

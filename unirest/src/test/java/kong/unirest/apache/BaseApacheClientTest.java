@@ -26,9 +26,9 @@
 package kong.unirest.apache;
 
 import kong.unirest.Headers;
-import org.apache.http.HttpHost;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +46,7 @@ class BaseApacheClientTest {
 
     @BeforeEach
     void setUp() {
-        request = new HttpGet();
+        request = new HttpGet("/");
         headers = new Headers();
     }
 

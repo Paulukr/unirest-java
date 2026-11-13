@@ -32,12 +32,12 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import kong.unirest.apache.ApacheAsyncClient;
 import kong.unirest.apache.ApacheClient;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpRequestInterceptor;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
+import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
+import org.apache.hc.client5.http.impl.async.HttpAsyncClientBuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -90,7 +90,7 @@ public class TestUtil {
 
     public static AsyncClient getFailureAsyncClient() {
         CloseableHttpAsyncClient client = HttpAsyncClientBuilder.create()
-                .addInterceptorFirst((HttpRequestInterceptor) (r, c) -> {
+                .addRequestInterceptorFirst((HttpRequestInterceptor) (r, e, c) -> {
             throw new IOException("Something horrible happened");
         }).build();
         client.start();

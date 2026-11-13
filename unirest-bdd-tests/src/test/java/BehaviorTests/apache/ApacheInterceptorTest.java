@@ -29,8 +29,8 @@ import BehaviorTests.BddTest;
 import BehaviorTests.MockServer;
 import BehaviorTests.RequestCapture;
 import kong.unirest.Unirest;
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequestInterceptor;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.HttpRequestInterceptor;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -44,7 +44,7 @@ public class ApacheInterceptorTest extends BddTest {
 
     @Test
     void totalAsyncFailure() throws Exception {
-        Unirest.config().addInterceptor((r, c) -> {
+        Unirest.config().addInterceptor((r, e, c) -> {
             throw new IOException("Something horrible happened");
         });
 
@@ -75,7 +75,7 @@ public class ApacheInterceptorTest extends BddTest {
 
     private class TestInterceptor implements HttpRequestInterceptor {
         @Override
-        public void process(org.apache.http.HttpRequest httpRequest, org.apache.http.protocol.HttpContext httpContext) throws HttpException, IOException {
+        public void process(org.apache.hc.core5.http.HttpRequest httpRequest, org.apache.hc.core5.http.EntityDetails entityDetails, org.apache.hc.core5.http.protocol.HttpContext httpContext) throws HttpException, IOException {
             httpRequest.addHeader("x-custom", "foo");
         }
     }

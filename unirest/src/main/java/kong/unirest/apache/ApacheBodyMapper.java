@@ -26,17 +26,16 @@
 package kong.unirest.apache;
 
 import kong.unirest.*;
-import org.apache.http.HttpEntity;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.entity.BasicHttpEntity;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.InputStreamEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.entity.mime.content.*;
-import org.apache.http.message.BasicNameValuePair;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
+import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
+import org.apache.hc.core5.http.io.entity.InputStreamEntity;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.client5.http.entity.mime.HttpMultipartMode;
+import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
+import org.apache.hc.client5.http.entity.mime.*;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 
 import java.io.File;
 import java.io.InputStream;
@@ -56,7 +55,7 @@ class ApacheBodyMapper {
 
     HttpEntity apply() {
         Optional<Body> body = request.getBody();
-        return body.map(this::applyBody).orElseGet(BasicHttpEntity::new);
+        return body.map(this::applyBody).orElseGet(() -> new ByteArrayEntity(new byte[0], null));
 
     }
 
@@ -79,11 +78,11 @@ class ApacheBodyMapper {
                 return new InputStreamEntity(new MonitoringInputStream(
                         (InputStream) bodyPart.getValue(),
                         b.getMonitor()
-                ));
+                ), null);
             }
-            return new InputStreamEntity((InputStream) bodyPart.getValue());
+            return new InputStreamEntity((InputStream) bodyPart.getValue(), null);
         } else {
-            return new ByteArrayEntity((byte[])bodyPart.getValue());
+            return new ByteArrayEntity((byte[])bodyPart.getValue(), null);
         }
     }
 
@@ -91,7 +90,9 @@ class ApacheBodyMapper {
         if (body.isMultiPart()) {
             MultipartEntityBuilder builder = MultipartEntityBuilder.create();
             builder.setCharset(body.getCharset());
-            builder.setMode(HttpMultipartMode.valueOf(body.getMode().name()));
+            builder.setContentType(org.apache.hc.core5.http.ContentType.create("multipart/form-data", body.getCharset()));
+            builder.setMode(body.getMode() == MultipartMode.BROWSER_COMPATIBLE ? HttpMultipartMode.LEGACY
+                    : body.getMode() == MultipartMode.RFC6532 ? HttpMultipartMode.EXTENDED : HttpMultipartMode.STRICT);
             for (BodyPart key : body.multiParts()) {
                 builder.addPart(key.getName(), apply(key, body));
             }
@@ -122,12 +123,19 @@ class ApacheBodyMapper {
         InputStream part = (InputStream)value.getValue();
         return new MonitoringStreamBody(part,
                 toApacheType(value.getContentType()),
-                value.getFileName(),
+                legacyFilename(value.getFileName(), body),
                 value.getName(),
                 body.getMonitor());
     }
 
 
+
+    private String legacyFilename(String filename, Body body) {
+        if (filename == null || body.getMode() != MultipartMode.STRICT) {
+            return filename;
+        }
+        return new String(filename.getBytes(StandardCharsets.US_ASCII), StandardCharsets.US_ASCII);
+    }
 
     private ContentBody toByteArrayBody(BodyPart value) {
         byte[] part = (byte[])value.getValue();
@@ -144,8 +152,8 @@ class ApacheBodyMapper {
         return cls.isAssignableFrom(value.getPartType());
     }
 
-    private org.apache.http.entity.ContentType toApacheType(String type) {
-        return org.apache.http.entity.ContentType.parse(type);
+    private org.apache.hc.core5.http.ContentType toApacheType(String type) {
+        return org.apache.hc.core5.http.ContentType.parse(type);
     }
 
     static List<NameValuePair> getList(Collection<BodyPart> parameters) {

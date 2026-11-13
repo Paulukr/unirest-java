@@ -26,37 +26,36 @@
 package kong.unirest.apache;
 
 import kong.unirest.*;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 
 import java.io.*;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 class ApacheResponse extends RawResponseBase {
-    private final HttpResponse r;
+    private final ClassicHttpResponse r;
 
-    public ApacheResponse(HttpResponse r, Config config, HttpRequestSummary reqSum) {
+    public ApacheResponse(ClassicHttpResponse r, Config config, HttpRequestSummary reqSum) {
         super(config, reqSum);
         this.r = r;
     }
 
     @Override
     public int getStatus() {
-        return r.getStatusLine().getStatusCode();
+        return r.getCode();
     }
 
     @Override
     public String getStatusText() {
-        return r.getStatusLine().getReasonPhrase();
+        return r.getReasonPhrase();
     }
 
     @Override
     public Headers getHeaders() {
         Headers h = new Headers();
-        Stream.of(r.getAllHeaders())
+        Stream.of(r.getHeaders())
                 .forEachOrdered(e -> h.add(e.getName(), e.getValue()));
         return h;
     }
@@ -130,9 +129,9 @@ class ApacheResponse extends RawResponseBase {
     @Override
     public String getContentType() {
         if (hasContent()) {
-            Header contentType = r.getEntity().getContentType();
+            String contentType = r.getEntity().getContentType();
             if (contentType != null) {
-                return contentType.getValue();
+                return contentType;
             }
         }
         return "";
@@ -141,9 +140,9 @@ class ApacheResponse extends RawResponseBase {
     @Override
     public String getEncoding() {
         if (hasContent()) {
-            Header contentType = r.getEntity().getContentEncoding();
+            String contentType = r.getEntity().getContentEncoding();
             if (contentType != null) {
-                return contentType.getValue();
+                return contentType;
             }
         }
         return "";

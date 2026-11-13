@@ -27,19 +27,20 @@ package BehaviorTests.apache;
 
 import BehaviorTests.SSLContextBuilder;
 import kong.unirest.Unirest;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.message.StatusLine;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.core5.http.config.Registry;
+import org.apache.hc.core5.http.config.RegistryBuilder;
+import org.apache.hc.client5.http.socket.ConnectionSocketFactory;
+import org.apache.hc.client5.http.socket.PlainConnectionSocketFactory;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -61,14 +62,14 @@ public class ExampleCertificateTest {
                 .loadKeyMaterial(readStore(), "badssl.com".toCharArray()) // use null as second param if you don't have a separate key password
                 .build();
 
-        HttpClient httpClient = HttpClients.custom().setSSLContext(sslContext).build();
+        HttpClient httpClient = HttpClients.custom().setConnectionManager(org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder.create().setSSLSocketFactory(new SSLConnectionSocketFactory(sslContext)).build()).build();
 
-        HttpResponse response = httpClient.execute(new HttpGet("https://client.badssl.com/"));
-        assertEquals(200, response.getStatusLine().getStatusCode());
+        org.apache.hc.core5.http.ClassicHttpResponse response = httpClient.execute(new org.apache.hc.core5.http.HttpHost("https", "client.badssl.com", 443), new HttpGet("https://client.badssl.com/"));
+        assertEquals(200, response.getCode());
         HttpEntity entity = response.getEntity();
 
         System.out.println("----------------------------------------");
-        System.out.println(response.getStatusLine());
+        System.out.println(new StatusLine(response));
         EntityUtils.consume(entity);
     }
 
@@ -93,7 +94,6 @@ public class ExampleCertificateTest {
 
         CloseableHttpClient httpClient =
                 HttpClients.custom()
-                        .setSSLSocketFactory(sslSocketFactory)
                         .setConnectionManager(cm)
                         .build();
 

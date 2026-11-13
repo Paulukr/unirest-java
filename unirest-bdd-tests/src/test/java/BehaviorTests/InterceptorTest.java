@@ -70,12 +70,12 @@ class InterceptorTest extends BddTest {
     }
 
     @Test
-    void canAddInterceptorToAsync() throws ExecutionException, InterruptedException {
+    void canAddInterceptorToAsync() throws Exception {
         Unirest.config().interceptor(interceptor);
 
         Unirest.get(MockServer.GET)
                 .asObjectAsync(RequestCapture.class)
-                .get();
+                .get(10, java.util.concurrent.TimeUnit.SECONDS);
 
         interceptor.cap.assertHeader("x-custom", "foo");
     }
@@ -106,7 +106,7 @@ class InterceptorTest extends BddTest {
                 .asyncClient(TestUtil.getFailureAsyncClient())
                 .interceptor(interceptor);
 
-        HttpResponse<String> response = Unirest.get(MockServer.GET).asStringAsync().get();
+        HttpResponse<String> response = Unirest.get(MockServer.GET).asStringAsync().get(10, java.util.concurrent.TimeUnit.SECONDS);
 
         Assertions.assertEquals(542, response.getStatus());
         Assertions.assertEquals("Something horrible happened", response.getStatusText());
