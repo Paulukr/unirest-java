@@ -29,7 +29,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- Keep 2.14.3: Jackson 2.16 changes source details in parse-error locations; review compatibility before upgrading. -->
         <jackson.version>2.14.3</jackson.version>
+        <gson.version>2.13.2</gson.version>
         <main.dir>${project.basedir}</main.dir>
         <junit.version>5.9.0</junit.version>
         <mockito.version>4.8.0</mockito.version>
