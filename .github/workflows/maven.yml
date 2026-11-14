@@ -23,10 +23,39 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: maven
       - name: Verify
-        run: mkdir -p tmp && mvn -B verify
+        run: mkdir -p tmp && mvn -B clean install
         env:
           JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=${{ github.workspace }}/tmp
           TMPDIR: ${{ github.workspace }}/tmp
+      - name: Assemble Maven repository artifact
+        if: matrix.java == '25' && github.event_name == 'push'
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(mvn -N -q help:evaluate -Dexpression=project.version -DforceStdout)
+          group=$(mvn -N -q help:evaluate -Dexpression=project.groupId -DforceStdout)
+          group_path=${group//.//}
+          for module in unirest-java-parent unirest-java unirest-object-mappers-gson unirest-objectmapper-jackson unirest-mocks; do
+            source_dir="$HOME/.m2/repository/$group_path/$module/$version"
+            destination="tmp/artifact/repository/$group_path/$module/$version"
+            mkdir -p "$destination"
+            cp "$source_dir/$module-$version.pom" "$destination/"
+            if [ "$module" != unirest-java-parent ]; then
+              cp "$source_dir/$module-$version.jar" "$destination/"
+            fi
+          done
+          cp LICENSE tmp/artifact/LICENSE
+        env:
+          JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=${{ github.workspace }}/tmp
+          TMPDIR: ${{ github.workspace }}/tmp
+      - name: Upload Maven repository artifact
+        if: matrix.java == '25' && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: unirest-maven-repository
+          path: tmp/artifact/
+          if-no-files-found: error
+          retention-days: 90
 
   cross-runtime:
     name: Build on Java 25, test on Java 8
