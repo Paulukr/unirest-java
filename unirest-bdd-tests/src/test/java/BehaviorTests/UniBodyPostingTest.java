@@ -129,7 +129,7 @@ class UniBodyPostingTest extends BddTest {
                 .body(postResponseMock)
                 .asObject(RequestCapture.class)
                 .getBody()
-                .assertBody("{\"url\":\"http://localhost:4567/post\"}");
+                .assertBody("{\"url\":\"http://localhost:4568/post\"}");
     }
 
     @Test

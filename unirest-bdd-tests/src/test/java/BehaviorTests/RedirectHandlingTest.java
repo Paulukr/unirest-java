@@ -41,7 +41,7 @@ class RedirectHandlingTest extends BddTest {
         Unirest.get(MockServer.REDIRECT)
                 .asObject(RequestCapture.class)
                 .getBody()
-                .assertUrl("http://localhost:4567/get");
+                .assertUrl("http://localhost:4568/get");
     }
 
     @Test
@@ -58,7 +58,7 @@ class RedirectHandlingTest extends BddTest {
                 .asObjectAsync(RequestCapture.class)
                 .get()
                 .getBody()
-                .assertUrl("http://localhost:4567/get");
+                .assertUrl("http://localhost:4568/get");
     }
 
     @Test

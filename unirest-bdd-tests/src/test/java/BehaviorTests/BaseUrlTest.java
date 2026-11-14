@@ -59,6 +59,6 @@ class BaseUrlTest extends BddTest {
                 .routeParam("another", "Ringo")
                 .asObject(RequestCapture.class)
                 .getBody()
-                .assertUrl("http://localhost:4567/get/George/passed/Ringo");
+                .assertUrl("http://localhost:4568/get/George/passed/Ringo");
     }
 }

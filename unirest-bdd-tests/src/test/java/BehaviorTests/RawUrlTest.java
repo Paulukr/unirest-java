@@ -35,7 +35,7 @@ class RawUrlTest extends BddTest {
         Unirest.get(MockServer.GET + "/foo/passed/Moody Blues")
                 .asObject(RequestCapture.class)
                 .getBody()
-                .assertUrl("http://localhost:4567/get/foo/passed/Moody%20Blues");
+                .assertUrl("http://localhost:4568/get/foo/passed/Moody%20Blues");
     }
 
     @Test
@@ -43,7 +43,7 @@ class RawUrlTest extends BddTest {
         Unirest.get(MockServer.GET + "/foo/passed/Moody\tBlues")
                 .asObject(RequestCapture.class)
                 .getBody()
-                .assertUrl("http://localhost:4567/get/foo/passed/Moody%09Blues");
+                .assertUrl("http://localhost:4568/get/foo/passed/Moody%09Blues");
     }
 
     @Test
@@ -53,6 +53,6 @@ class RawUrlTest extends BddTest {
                 .routeParam("file name", "Moody Blues")
                 .asObject(RequestCapture.class)
                 .getBody()
-                .assertUrl("http://localhost:4567/get/foo/passed/Moody%20Blues");
+                .assertUrl("http://localhost:4568/get/foo/passed/Moody%20Blues");
     }
 }

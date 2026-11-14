@@ -51,7 +51,7 @@ class MetricsTest extends BddTest {
                 .asEmpty();
 
         assertEquals(2, metric.routes.get(GET).size());
-        assertEquals(1, metric.routes.get("http://localhost:4567/get/foo/passed?fruit=orange").size());
+        assertEquals(1, metric.routes.get("http://localhost:4568/get/foo/passed?fruit=orange").size());
     }
 
     @Test
@@ -63,7 +63,7 @@ class MetricsTest extends BddTest {
                 .queryString("fruit", "orange")
                 .asEmpty();
 
-        assertEquals(1, metric.routes.get("http://localhost:4567/get/{params}/passed").size());
+        assertEquals(1, metric.routes.get("http://localhost:4568/get/{params}/passed").size());
     }
 
     @Test
@@ -174,9 +174,9 @@ class MetricsTest extends BddTest {
                 .asObject(HashMap.class)
                 .getBody();
 
-        assertEquals("localhost:4567", map.get("host()"));
+        assertEquals("localhost:4568", map.get("host()"));
         assertEquals("/sparkle/joy/yippy", map.get("uri()")); // this is different from what the Spark doc says.
-        assertEquals("http://localhost:4567/sparkle/joy/yippy", map.get("url()"));
+        assertEquals("http://localhost:4568/sparkle/joy/yippy", map.get("url()"));
         assertEquals("", map.get("contextPath()"));
         assertEquals("/sparkle/joy/yippy", map.get("pathInfo()"));
         assertEquals("food=hamberders&colour=red", map.get("queryString()"));

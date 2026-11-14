@@ -34,7 +34,6 @@ import kong.unirest.Unirest;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Disabled // The Janky Proxy is pretty janky and isn't entirely stable in CI
 class ProxyTest extends BddTest {
 
     @AfterEach
@@ -47,9 +46,9 @@ class ProxyTest extends BddTest {
 
     @Test
     void canUseNonAuthProxy() {
-        JankyProxy.runServer("localhost", 4567, 7777);
+        int proxyPort = JankyProxy.runServer("localhost", MockServer.PORT, 0);
 
-        Unirest.config().proxy(new Proxy("localhost", 7777));
+        Unirest.config().proxy(new Proxy("localhost", proxyPort));
 
         Unirest.get(MockServer.GET)
                 .asObject(RequestCapture.class)
@@ -61,12 +60,12 @@ class ProxyTest extends BddTest {
 
     @Test
     void canUseNonAuthProxy_OnPerRequest() {
-        JankyProxy.runServer("localhost", 4567, 7777);
+        int proxyPort = JankyProxy.runServer("localhost", MockServer.PORT, 0);
 
-        Unirest.config().proxy(new Proxy("localhost", 7777));
+        Unirest.config().proxy(new Proxy("localhost", proxyPort));
 
         Unirest.get(MockServer.GET)
-                .proxy(new Proxy("localhost", 7777, "username", "password1!"))
+                .proxy(new Proxy("localhost", proxyPort, "username", "password1!"))
                 .asObject(RequestCapture.class)
                 .getBody()
                 .assertStatus(200);
@@ -76,9 +75,9 @@ class ProxyTest extends BddTest {
 
     @Test
     void canUseNonAuthProxyWithEasyMethod() {
-        JankyProxy.runServer("localhost", 4567, 7777);
+        int proxyPort = JankyProxy.runServer("localhost", MockServer.PORT, 0);
 
-        Unirest.config().proxy("localhost", 7777);
+        Unirest.config().proxy("localhost", proxyPort);
 
         Unirest.get(MockServer.GET)
                 .asObject(RequestCapture.class)
@@ -90,10 +89,10 @@ class ProxyTest extends BddTest {
 
     @Test
     void canPassProxyOnRequest() {
-        JankyProxy.runServer("localhost", 4567, 7777);
+        int proxyPort = JankyProxy.runServer("localhost", MockServer.PORT, 0);
 
         Unirest.get(MockServer.GET)
-                .proxy("localhost", 7777)
+                .proxy("localhost", proxyPort)
                 .asObject(RequestCapture.class)
                 .getBody()
                 .assertStatus(200);
@@ -103,9 +102,9 @@ class ProxyTest extends BddTest {
 
     @Test
     void canSetAuthenticatedProxy(){
-        JankyProxy.runServer("localhost", 4567, 7777);
+        int proxyPort = JankyProxy.runServer("localhost", MockServer.PORT, 0);
 
-        Unirest.config().proxy("localhost", 7777, "username", "password1!");
+        Unirest.config().proxy("localhost", proxyPort, "username", "password1!");
 
         Unirest.get(MockServer.GET)
                 .asObject(RequestCapture.class)
@@ -118,10 +117,10 @@ class ProxyTest extends BddTest {
     @Test
     @Disabled // there is some weird conflict between jetty and unirest here
     void canFlagTheClientsToUseSystemProperties(){
-        JankyProxy.runServer("localhost", 4567, 7777);
+        int proxyPort = JankyProxy.runServer("localhost", MockServer.PORT, 0);
 
         System.setProperty("http.proxyHost", "localhost");
-        System.setProperty("http.proxyPort", "7777");
+        System.setProperty("http.proxyPort", String.valueOf(proxyPort));
 
         Unirest.config().useSystemProperties(true);
 

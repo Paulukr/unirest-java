@@ -48,7 +48,7 @@ class PathParamTest extends BddTest {
                 .routeParam(ImmutableMap.of("params", param, "another", 42))
                 .asObject(RequestCapture.class)
                 .getBody()
-                .assertUrl("http://localhost:4567/get/Hamberders/passed/42")
+                .assertUrl("http://localhost:4568/get/Hamberders/passed/42")
                 .assertPathParam("params", param)
                 .assertPathParam("another", "42");
     }
@@ -58,13 +58,13 @@ class PathParamTest extends BddTest {
         Unirest.get(MockServer.GET + "/" + URLEncoder.encode("[brackets]") + "/passed")
                 .asObject(RequestCapture.class)
                 .getBody()
-                .assertUrl("http://localhost:4567/get/%5Bbrackets%5D/passed");
+                .assertUrl("http://localhost:4568/get/%5Bbrackets%5D/passed");
 
         Unirest.get(MockServer.PASSED_PATH_PARAM)
                 .routeParam("params", "[brackets]")
                 .asObject(RequestCapture.class)
                 .getBody()
-                .assertUrl("http://localhost:4567/get/%5Bbrackets%5D/passed");
+                .assertUrl("http://localhost:4568/get/%5Bbrackets%5D/passed");
     }
 
     @Test
@@ -75,7 +75,7 @@ class PathParamTest extends BddTest {
                 .routeParam("params", param)
                 .asObject(RequestCapture.class)
                 .getBody()
-                .assertUrl("http://localhost:4567/get/jack%2B4%40email.com/passed")
+                .assertUrl("http://localhost:4568/get/jack%2B4%40email.com/passed")
                 .assertPathParam("params", param);
     }
 
@@ -127,7 +127,7 @@ class PathParamTest extends BddTest {
                         Unirest.get(MockServer.HOST + "/{method}")
                                 .queryString("name", "Mark")
                                 .asEmpty());
-        Assertions.assertEquals("java.lang.IllegalArgumentException: Illegal character in path at index 22: http://localhost:4567/{method}?name=Mark", ex.getMessage());
+        Assertions.assertEquals("java.lang.IllegalArgumentException: Illegal character in path at index 22: http://localhost:4568/{method}?name=Mark", ex.getMessage());
     }
 
     @Test
@@ -138,7 +138,7 @@ class PathParamTest extends BddTest {
                 .routeParam("params", value)
                 .asObject(RequestCapture.class)
                 .getBody()
-                .assertUrl("http://localhost:4567/get/%2F%3F%D0%8A%D0%AF%D0%AF/passed")
+                .assertUrl("http://localhost:4568/get/%2F%3F%D0%8A%D0%AF%D0%AF/passed")
                 .assertPathParam("params", value);
     }
 
@@ -150,7 +150,7 @@ class PathParamTest extends BddTest {
                 .routeParam("params", value)
                 .asObject(RequestCapture.class)
                 .getBody()
-                .assertUrl("http://localhost:4567/get/Hunky%20Dory%2BCheese%20Wiz/passed")
+                .assertUrl("http://localhost:4568/get/Hunky%20Dory%2BCheese%20Wiz/passed")
                 .assertPathParam("params", value);
     }
 
@@ -161,7 +161,7 @@ class PathParamTest extends BddTest {
                 .asObject(RequestCapture.class)
                 .getBody()
                 .assertStatus(404)
-                .assertUrl("http://localhost:4567/get//passed");
+                .assertUrl("http://localhost:4568/get//passed");
     }
 
     @Test
@@ -172,8 +172,8 @@ class PathParamTest extends BddTest {
                 .asEmpty()
                 .getRequestSummary();
 
-        assertEquals("http://localhost:4567/get/cheese/passed?fruit=apples", sum.getUrl());
-        assertEquals("http://localhost:4567/get/{params}/passed", sum.getRawPath());
+        assertEquals("http://localhost:4568/get/cheese/passed?fruit=apples", sum.getUrl());
+        assertEquals("http://localhost:4568/get/{params}/passed", sum.getRawPath());
         assertEquals(HttpMethod.GET, sum.getHttpMethod());
     }
 
@@ -186,8 +186,8 @@ class PathParamTest extends BddTest {
                 .get()
                 .getRequestSummary();
 
-        assertEquals("http://localhost:4567/get/cheese/passed?fruit=apples", sum.getUrl());
-        assertEquals("http://localhost:4567/get/{params}/passed", sum.getRawPath());
+        assertEquals("http://localhost:4568/get/cheese/passed?fruit=apples", sum.getUrl());
+        assertEquals("http://localhost:4568/get/{params}/passed", sum.getRawPath());
         assertEquals(HttpMethod.GET, sum.getHttpMethod());
     }
 }

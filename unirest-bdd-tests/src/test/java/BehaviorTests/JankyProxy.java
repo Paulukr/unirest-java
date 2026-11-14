@@ -34,7 +34,7 @@ import java.net.*;
  */
 public class JankyProxy {
     public static ThreadProxy thread;
-    public static void runServer(String host, int remoteport, int localport) {
+    public static int runServer(String host, int remoteport, int localport) {
         try {
             // and the local port that we listen for connections on
             // Print a start-up message
@@ -42,10 +42,9 @@ public class JankyProxy {
                     + " on port " + localport);
             ServerSocket server = new ServerSocket(localport);
             thread = new ThreadProxy(server, host, remoteport);
+            return server.getLocalPort();
         } catch (Exception e) {
-            System.err.println(e);
-            System.err.println("Usage: java ProxyMultiThread "
-                    + "<host> <remoteport> <localport>");
+            throw new IllegalStateException("Unable to start proxy", e);
         }
     }
 
@@ -75,7 +74,7 @@ class ThreadProxy extends Thread {
     private ServerSocket socket;
     private final String SERVER_URL;
     private final int SERVER_PORT;
-    public boolean wasUsedForClientToServer;
+    public volatile boolean wasUsedForClientToServer;
 
     ThreadProxy(ServerSocket socket, String ServerUrl, int ServerPort) {
         this.SERVER_URL = ServerUrl;
@@ -109,9 +108,9 @@ class ThreadProxy extends Thread {
                 int bytes_read;
                 try {
                     while ((bytes_read = inFromClient.read(request)) != -1) {
+                        wasUsedForClientToServer = true;
                         outToServer.write(request, 0, bytes_read);
                         outToServer.flush();
-                        wasUsedForClientToServer = true;
                     }
                 } catch (IOException ignored) {
                 }

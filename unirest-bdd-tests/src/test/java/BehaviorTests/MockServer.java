@@ -60,7 +60,7 @@ public class MockServer {
 
     private static final TestObjectMapper om = new TestObjectMapper();
     private static String responseBody;
-    public static final int PORT = 4567;
+    public static final int PORT = 4568;
     public static final String HOST = "http://localhost:" + PORT;
     public static final String WINDOWS_LATIN_1_FILE = HOST + "/data/cp1250.txt";
     public static final String REDIRECT = HOST + "/redirect";

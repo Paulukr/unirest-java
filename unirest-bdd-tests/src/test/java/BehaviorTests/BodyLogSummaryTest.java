@@ -124,7 +124,7 @@ class BodyLogSummaryTest extends BddTest {
                 .toSummary()
                 .asString();
 
-        assertEquals("POST http://localhost:4567/raw\n" +
+        assertEquals("POST http://localhost:4568/raw\n" +
                 "Accept=image/raw\n" +
                 "===================================\n" +
                 "--5798a3ff-ed92-4e9e-a9fe-bd7853cea758\n" +
