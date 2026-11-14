@@ -27,3 +27,29 @@ jobs:
         env:
           JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=${{ github.workspace }}/tmp
           TMPDIR: ${{ github.workspace }}/tmp
+
+  cross-runtime:
+    name: Build on Java 25, test on Java 8
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Compile with Java 25
+        run: mkdir -p tmp && mvn -B verify -DskipTests && cp unirest/target/classes/kong/unirest/Unirest.class tmp/Unirest.class
+        env:
+          JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=${{ github.workspace }}/tmp
+          TMPDIR: ${{ github.workspace }}/tmp
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '8'
+          cache: maven
+      - name: Test on Java 8
+        run: mvn -B verify && cmp tmp/Unirest.class unirest/target/classes/kong/unirest/Unirest.class
+        env:
+          JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=${{ github.workspace }}/tmp
+          TMPDIR: ${{ github.workspace }}/tmp
