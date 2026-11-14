@@ -104,14 +104,23 @@ class LifeCycleTest extends BddTest {
         assertNotSame(Unirest.spawnInstance(), Unirest.spawnInstance());
     }
 
-    @Test
-    void shouldReuseThreadPool() {
+    @org.junit.jupiter.api.RepeatedTest(5)
+    void shouldReuseThreadPool() throws Exception {
+        Unirest.get(MockServer.GET).asStringAsync().get(10, java.util.concurrent.TimeUnit.SECONDS);
         int startingCount = ManagementFactory.getThreadMXBean().getThreadCount();
         IntStream.range(0,100).forEach(i -> {
             Unirest.config().reset().getClient();
             Unirest.config().getAsyncClient();
         });
-        assertTrue(ManagementFactory.getThreadMXBean().getThreadCount() <= startingCount + 10);
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
+        int endingCount = ManagementFactory.getThreadMXBean().getThreadCount();
+        while (endingCount > startingCount + 10 && System.nanoTime() < deadline) {
+            Thread.sleep(25);
+            endingCount = ManagementFactory.getThreadMXBean().getThreadCount();
+        }
+        final int finalCount = endingCount;
+        assertTrue(endingCount <= startingCount + 10,
+                () -> "Threads before: " + startingCount + ", after: " + finalCount + "; " + Thread.getAllStackTraces().keySet());
     }
 
     @Test
