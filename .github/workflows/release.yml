@@ -23,6 +23,5 @@ jobs:
           release_name: Release ${{ github.ref }}
           body: |
             See CHANGELOG.md for details.
-            Fresh releases may take up to 20 minutes to show up in Maven Central: https://mvnrepository.com/artifact/com.konghq/unirest-java
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(github.ref_name, '-alpha') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-rc') }}
