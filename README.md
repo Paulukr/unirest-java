@@ -1,4 +1,4 @@
-# Unirest for Java 3 — community fork
+# Unirest 3 — community fork
 
 [![Verify](https://github.com/Paulukr/unirest-java/actions/workflows/maven.yml/badge.svg?branch=u3a5)](https://github.com/Paulukr/unirest-java/actions/workflows/maven.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
