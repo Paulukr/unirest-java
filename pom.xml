@@ -5,9 +5,9 @@
     <artifactId>unirest-java-parent</artifactId>
     <packaging>pom</packaging>
     <version>3.14.6-alpha.1.fork.hc4</version>
-    <name>unirest</name>
-    <description>Parent pom for unirest packages</description>
-    <url>http://github.com/Kong/unirest-java/</url>
+    <name>Unirest 3 community fork</name>
+    <description>Independent prerelease fork of the Unirest 3 Java packages</description>
+    <url>https://github.com/Paulukr/unirest-java</url>
 
     <licenses>
         <license>
@@ -39,10 +39,10 @@
     </properties>
 
     <scm>
-        <url>https://github.com/Kong/unirest-java</url>
-        <connection>scm:git:git@github.com:Kong/unirest-java.git</connection>
-        <developerConnection>scm:git:git@github.com:Kong/unirest-java.git</developerConnection>
-        <tag>v3.14.5</tag>
+        <url>https://github.com/Paulukr/unirest-java</url>
+        <connection>scm:git:https://github.com/Paulukr/unirest-java.git</connection>
+        <developerConnection>scm:git:https://github.com/Paulukr/unirest-java.git</developerConnection>
+        <tag>HEAD</tag>
     </scm>
 
     <developers>
@@ -51,7 +51,7 @@
             <name>Ryan Bergman</name>
             <url>https://github.com/ryber</url>
             <roles>
-                <role>Maintainer</role>
+                <role>Upstream maintainer</role>
             </roles>
         </developer>
     </developers>
