@@ -58,6 +58,25 @@
         </dependency>
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>modern-java-test-access</id>
+            <activation>
+                <jdk>[9,)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <argLine>-Duser.timezone=UTC ${itCoverageAgent} --add-opens=java.base/java.lang=ALL-UNNAMED</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <build>
         <pluginManagement>
             <plugins>
