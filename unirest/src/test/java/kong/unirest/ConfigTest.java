@@ -115,6 +115,16 @@ class ConfigTest {
     }
 
     @Test
+    void considersStartingAsyncClientRunningUsingOneStateRead() {
+        CloseableHttpAsyncClient c = mock(CloseableHttpAsyncClient.class);
+        when(c.getStatus()).thenReturn(org.apache.hc.core5.reactor.IOReactorStatus.INACTIVE,
+                org.apache.hc.core5.reactor.IOReactorStatus.ACTIVE);
+
+        assertTrue(new ApacheAsyncClient(c, config).isRunning());
+        verify(c, times(1)).getStatus();
+    }
+
+    @Test
     void willRebuildIfClosableAndStopped() {
         CloseableHttpAsyncClient c = mock(CloseableHttpAsyncClient.class);
         when(c.getStatus()).thenReturn(org.apache.hc.core5.reactor.IOReactorStatus.SHUT_DOWN);

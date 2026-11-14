@@ -127,14 +127,19 @@ class ApacheAsyncConfig {
 
     public boolean isRunning() {
         return Util.tryCast(client, CloseableHttpAsyncClient.class)
-                .map(c -> c.getStatus() == IOReactorStatus.ACTIVE || c.getStatus() == IOReactorStatus.INACTIVE).orElse(true);
+                .map(this::isActiveOrStarting).orElse(true);
+    }
+
+    private boolean isActiveOrStarting(CloseableHttpAsyncClient async) {
+        IOReactorStatus status = async.getStatus();
+        return status == IOReactorStatus.ACTIVE || status == IOReactorStatus.INACTIVE;
     }
 
     public HttpAsyncClient getClient() { return client; }
 
     public Stream<Exception> close() {
         return Util.collectExceptions(Util.tryCast(client, CloseableHttpAsyncClient.class)
-                        .filter(c -> c.getStatus() == IOReactorStatus.ACTIVE || c.getStatus() == IOReactorStatus.INACTIVE)
+                        .filter(this::isActiveOrStarting)
                         .map(c -> Util.tryDo(c, CloseableHttpAsyncClient::close))
                         .filter(java.util.Optional::isPresent).map(java.util.Optional::get),
                 Util.tryDo(manager, m -> m.close()),
